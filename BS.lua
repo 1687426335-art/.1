@@ -5,7 +5,7 @@ game:GetService("StarterGui"):SetCore("SendNotification",{ Title = "看到这个
 local CoreGui = game:GetService("StarterGui")
 
 CoreGui:SetCore("SendNotification", {
-    Title = "BS",
+    Title = "wdfex",
     Text = "正在加载（反挂机已开启）",
     Duration = 5, 
 })
@@ -17,7 +17,7 @@ print("反挂机开启")
 		   vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
 		end)
 local OrionLib = loadstring(game:HttpGet('https://pastebin.com/raw/iXGNieAz'))()
-local Window = OrionLib:MakeWindow({Name = "黑洞中心(BS)", HidePremium = false, SaveConfig = true,IntroText = "黑洞中心启动", ConfigFolder = "黑洞中心"})
+local Window = OrionLib:MakeWindow({Name = "黑洞中心(wdfex)", HidePremium = false, SaveConfig = true,IntroText = "黑洞中心启动", ConfigFolder = "黑洞中心"})
 
 local Tab = Window:MakeTab({
     Name = "我想对你们说的话",
@@ -25,13 +25,13 @@ local Tab = Window:MakeTab({
     PremiumOnly = false
 })
 
-Tab:AddParagraph("❤️BS脚本❤️")
-Tab:AddParagraph("本脚本主要更新通用和黑洞类")
+Tab:AddParagraph("wdfex脚本")
+Tab:AddParagraph("本脚本主要更新通用类功能")
 Tab:AddParagraph("阿尔宙斯注入器可能用不了")
-Tab:AddParagraph("作者游戏名老大二世")
-Tab:AddParagraph("作者QQ1545959422")
-Tab:AddParagraph("副作者QQ1710433791")
-Tab:AddParagraph("Q群934326582")
+Tab:AddParagraph("作者wdfex")
+Tab:AddParagraph("作者QQ1687426335")
+Tab:AddParagraph("Q群无")
+Tab:AddParagraph("本项目由wdfex个人开发")
 
 local Tab = Window:MakeTab({
 	Name = "设置",
@@ -452,7 +452,7 @@ Tab:AddButton({
 	Name = "点击传送工器",
 	Callback = function()
 
-mouse = game.Players.LocalPlayer:GetMouse() tool = Instance.new("Tool") tool.RequiresHandle = false tool.Name = "[BS]传送工具" tool.Activated:connect(function() local pos = mouse.Hit+Vector3.new(0,2.5,0) pos = CFrame.new(pos.X,pos.Y,pos.Z) game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = pos end) tool.Parent = game.Players.LocalPlayer.Backpack
+mouse = game.Players.LocalPlayer:GetMouse() tool = Instance.new("Tool") tool.RequiresHandle = false tool.Name = "[wdfex]传送工具" tool.Activated:connect(function() local pos = mouse.Hit+Vector3.new(0,2.5,0) pos = CFrame.new(pos.X,pos.Y,pos.Z) game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = pos end) tool.Parent = game.Players.LocalPlayer.Backpack
 
 	end
 })
