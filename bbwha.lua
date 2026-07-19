@@ -1,349 +1,172 @@
 -- ============================================
---  WANTED 脚本 + 赛博朋克高级加载动画
---  加载完成后自动消失 + 启动防封和主功能
+--  WANTED 脚本 + 卡密验证 + 悬浮窗
+--  卡密：91
+--  验证成功后显示悬浮窗菜单
 -- ============================================
 
 local player = game.Players.LocalPlayer
-local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local VirtualUser = game:GetService("VirtualUser")
-local TeleportService = game:GetService("TeleportService")
-local CoreGui = game:GetService("CoreGui")
+
+print("🔫 WANTED 脚本已加载，等待卡密验证...")
 
 -- ============================================
---  🎬 赛博朋克高级加载动画
+--  🔑 卡密验证系统（卡密：91）
 -- ============================================
-local function createLoadingScreen()
+local function showLogin()
     local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "LoadingScreen"
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.Name = "LoginGUI"
     screenGui.Parent = CoreGui
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    -- === 主背景（深色渐变） ===
+    -- 背景遮罩
     local bg = Instance.new("Frame")
     bg.Size = UDim2.new(1, 0, 1, 0)
-    bg.BackgroundColor3 = Color3.fromRGB(10, 8, 20)
-    bg.BackgroundTransparency = 0
+    bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    bg.BackgroundTransparency = 0.6
     bg.Parent = screenGui
 
-    -- 背景光晕（动态脉冲）
-    local glow = Instance.new("ImageLabel")
-    glow.Size = UDim2.new(2, 0, 2, 0)
-    glow.Position = UDim2.new(0.5, -500, 0.5, -500)
-    glow.BackgroundTransparency = 1
-    glow.Image = "rbxassetid://2668108961"
-    glow.ImageTransparency = 0.85
-    glow.ImageColor3 = Color3.fromRGB(120, 80, 255)
-    glow.Parent = screenGui
+    -- 主登录框
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 380, 0, 280)
+    frame.Position = UDim2.new(0.5, -190, 0.5, -140)
+    frame.BackgroundColor3 = Color3.fromRGB(15, 12, 30)
+    frame.BorderSizePixel = 2
+    frame.BorderColor3 = Color3.fromRGB(150, 100, 255)
+    frame.Parent = screenGui
 
-    -- 背景粒子网格（动态线条）
-    local grid = Instance.new("Frame")
-    grid.Size = UDim2.new(0.8, 0, 0.6, 0)
-    grid.Position = UDim2.new(0.1, 0, 0.2, 0)
-    grid.BackgroundTransparency = 1
-    grid.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    grid.Parent = screenGui
+    local frameCorner = Instance.new("UICorner")
+    frameCorner.CornerRadius = UDim.new(0, 16)
+    frameCorner.Parent = frame
 
-    -- 网格线（X方向）
-    for i = 0, 20 do
-        local line = Instance.new("Frame")
-        line.Size = UDim2.new(1, 0, 0, 1)
-        line.Position = UDim2.new(0, 0, i / 20, 0)
-        line.BackgroundColor3 = Color3.fromRGB(80, 60, 180)
-        line.BackgroundTransparency = 0.7
-        line.Parent = grid
-    end
+    -- 霓虹边框光效
+    local borderGlow = Instance.new("Frame")
+    borderGlow.Size = UDim2.new(1, 10, 1, 10)
+    borderGlow.Position = UDim2.new(0, -5, 0, -5)
+    borderGlow.BackgroundTransparency = 1
+    borderGlow.BorderSizePixel = 2
+    borderGlow.BorderColor3 = Color3.fromRGB(150, 100, 255)
+    borderGlow.Parent = frame
+    local borderCorner = Instance.new("UICorner")
+    borderCorner.CornerRadius = UDim.new(0, 18)
+    borderCorner.Parent = borderGlow
 
-    -- 网格线（Y方向）
-    for i = 0, 30 do
-        local line = Instance.new("Frame")
-        line.Size = UDim2.new(0, 1, 1, 0)
-        line.Position = UDim2.new(i / 30, 0, 0, 0)
-        line.BackgroundColor3 = Color3.fromRGB(80, 60, 180)
-        line.BackgroundTransparency = 0.7
-        line.Parent = grid
-    end
-
-    -- === 主Logo ===
+    -- Logo
     local logo = Instance.new("TextLabel")
-    logo.Size = UDim2.new(0, 0, 0, 120)
-    logo.Position = UDim2.new(0.5, 0, 0.25, 0)
-    logo.AnchorPoint = Vector2.new(0.5, 0.5)
+    logo.Size = UDim2.new(1, 0, 0, 60)
+    logo.Position = UDim2.new(0, 0, 0, 15)
     logo.BackgroundTransparency = 1
-    logo.Text = "WANTED"
+    logo.Text = "🔫 WANTED"
     logo.TextColor3 = Color3.fromRGB(255, 255, 255)
-    logo.TextSize = 90
+    logo.TextSize = 32
     logo.Font = Enum.Font.GothamBold
-    logo.TextScaled = true
-    logo.Parent = screenGui
+    logo.Parent = frame
 
-    -- Logo霓虹光晕
-    local logoGlow = Instance.new("TextLabel")
-    logoGlow.Size = UDim2.new(1, 0, 1, 0)
-    logoGlow.Position = UDim2.new(0, 0, 0, 0)
-    logoGlow.BackgroundTransparency = 1
-    logoGlow.Text = "WANTED"
-    logoGlow.TextColor3 = Color3.fromRGB(150, 100, 255)
-    logoGlow.TextSize = 90
-    logoGlow.Font = Enum.Font.GothamBold
-    logoGlow.TextScaled = true
-    logoGlow.TextTransparency = 0.5
-    logoGlow.Parent = logo
+    -- 副标题
+    local sub = Instance.new("TextLabel")
+    sub.Size = UDim2.new(1, 0, 0, 25)
+    sub.Position = UDim2.new(0, 0, 0, 75)
+    sub.BackgroundTransparency = 1
+    sub.Text = "请输入卡密验证"
+    sub.TextColor3 = Color3.fromRGB(180, 160, 220)
+    sub.TextSize = 14
+    sub.Font = Enum.Font.Gotham
+    sub.Parent = frame
 
-    -- === 霓虹文字（闪烁） ===
-    local subText = Instance.new("TextLabel")
-    subText.Size = UDim2.new(0, 0, 0, 30)
-    subText.Position = UDim2.new(0.5, 0, 0.35, 0)
-    subText.AnchorPoint = Vector2.new(0.5, 0.5)
-    subText.BackgroundTransparency = 1
-    subText.Text = "► 系统加载中..."
-    subText.TextColor3 = Color3.fromRGB(180, 150, 255)
-    subText.TextSize = 16
-    subText.Font = Enum.Font.Gotham
-    subText.Parent = screenGui
+    -- 卡密输入框
+    local input = Instance.new("TextBox")
+    input.Size = UDim2.new(0, 220, 0, 40)
+    input.Position = UDim2.new(0.5, -110, 0, 115)
+    input.BackgroundColor3 = Color3.fromRGB(30, 25, 50)
+    input.TextColor3 = Color3.fromRGB(255, 255, 255)
+    input.PlaceholderText = "请输入卡密"
+    input.PlaceholderColor3 = Color3.fromRGB(100, 80, 150)
+    input.TextSize = 18
+    input.Font = Enum.Font.Gotham
+    input.BorderSizePixel = 0
+    input.Parent = frame
 
-    -- === 进度条容器 ===
-    local barContainer = Instance.new("Frame")
-    barContainer.Size = UDim2.new(0, 500, 0, 8)
-    barContainer.Position = UDim2.new(0.5, -250, 0.5, 30)
-    barContainer.BackgroundColor3 = Color3.fromRGB(30, 25, 50)
-    barContainer.BorderSizePixel = 0
-    barContainer.Parent = screenGui
+    local inputCorner = Instance.new("UICorner")
+    inputCorner.CornerRadius = UDim.new(0, 8)
+    inputCorner.Parent = input
 
-    local barCorner = Instance.new("UICorner")
-    barCorner.CornerRadius = UDim.new(0, 4)
-    barCorner.Parent = barContainer
+    -- 错误提示
+    local errorLabel = Instance.new("TextLabel")
+    errorLabel.Size = UDim2.new(1, 0, 0, 25)
+    errorLabel.Position = UDim2.new(0, 0, 0, 162)
+    errorLabel.BackgroundTransparency = 1
+    errorLabel.Text = ""
+    errorLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+    errorLabel.TextSize = 13
+    errorLabel.Font = Enum.Font.Gotham
+    errorLabel.TextXAlignment = Enum.TextXAlignment.Center
+    errorLabel.Parent = frame
 
-    -- 进度条边框光效
-    local barGlow = Instance.new("Frame")
-    barGlow.Size = UDim2.new(1, 10, 1, 10)
-    barGlow.Position = UDim2.new(0, -5, 0, -5)
-    barGlow.BackgroundTransparency = 1
-    barGlow.BorderSizePixel = 2
-    barGlow.BorderColor3 = Color3.fromRGB(150, 100, 255)
-    barGlow.Parent = barContainer
+    -- 验证按钮
+    local loginBtn = Instance.new("TextButton")
+    loginBtn.Size = UDim2.new(0, 140, 0, 42)
+    loginBtn.Position = UDim2.new(0.5, -70, 0, 198)
+    loginBtn.BackgroundColor3 = Color3.fromRGB(150, 100, 255)
+    loginBtn.Text = "🚀 验证"
+    loginBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    loginBtn.TextSize = 18
+    loginBtn.Font = Enum.Font.GothamBold
+    loginBtn.BorderSizePixel = 0
+    loginBtn.Parent = frame
 
-    local barGlowCorner = Instance.new("UICorner")
-    barGlowCorner.CornerRadius = UDim.new(0, 6)
-    barGlowCorner.Parent = barGlow
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 8)
+    btnCorner.Parent = loginBtn
 
-    -- === 流光进度条 ===
-    local progressBar = Instance.new("Frame")
-    progressBar.Size = UDim2.new(0, 0, 1, 0)
-    progressBar.BackgroundColor3 = Color3.fromRGB(180, 100, 255)
-    progressBar.BackgroundTransparency = 0
-    progressBar.BorderSizePixel = 0
-    progressBar.Parent = barContainer
+    -- 按钮悬停光效
+    local btnGlow = Instance.new("Frame")
+    btnGlow.Size = UDim2.new(1, 10, 1, 10)
+    btnGlow.Position = UDim2.new(0, -5, 0, -5)
+    btnGlow.BackgroundTransparency = 1
+    btnGlow.BorderSizePixel = 2
+    btnGlow.BorderColor3 = Color3.fromRGB(200, 150, 255)
+    btnGlow.BorderTransparency = 0.8
+    btnGlow.Parent = loginBtn
+    local btnGlowCorner = Instance.new("UICorner")
+    btnGlowCorner.CornerRadius = UDim.new(0, 10)
+    btnGlowCorner.Parent = btnGlow
 
-    local progressCorner = Instance.new("UICorner")
-    progressCorner.CornerRadius = UDim.new(0, 4)
-    progressCorner.Parent = progressBar
-
-    -- 进度条流光高光
-    local shine = Instance.new("Frame")
-    shine.Size = UDim2.new(0.3, 0, 1, 0)
-    shine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    shine.BackgroundTransparency = 0.5
-    shine.BorderSizePixel = 0
-    shine.Parent = progressBar
-
-    local shineCorner = Instance.new("UICorner")
-    shineCorner.CornerRadius = UDim.new(0, 4)
-    shineCorner.Parent = shine
-
-    -- === 百分比文字 ===
-    local percentText = Instance.new("TextLabel")
-    percentText.Size = UDim2.new(0, 0, 0, 25)
-    percentText.Position = UDim2.new(0.5, 0, 0.5, 55)
-    percentText.AnchorPoint = Vector2.new(0.5, 0.5)
-    percentText.BackgroundTransparency = 1
-    percentText.Text = "0%"
-    percentText.TextColor3 = Color3.fromRGB(200, 180, 255)
-    percentText.TextSize = 14
-    percentText.Font = Enum.Font.Gotham
-    percentText.Parent = screenGui
-
-    -- === 底部版本信息 ===
-    local version = Instance.new("TextLabel")
-    version.Size = UDim2.new(0, 0, 0, 20)
-    version.Position = UDim2.new(1, -10, 1, -10)
-    version.AnchorPoint = Vector2.new(1, 1)
-    version.BackgroundTransparency = 1
-    version.Text = "v3.0 | 防封系统"
-    version.TextColor3 = Color3.fromRGB(100, 80, 150)
-    version.TextSize = 12
-    version.Font = Enum.Font.Gotham
-    version.Parent = screenGui
-
-    -- === 粒子系统 ===
-    local particles = {}
-    for i = 1, 30 do
-        local p = Instance.new("Frame")
-        p.Size = UDim2.new(0, 3, 0, 3)
-        p.Position = UDim2.new(math.random(), 0, math.random(), 0)
-        p.BackgroundColor3 = Color3.fromRGB(150, 100, 255)
-        p.BackgroundTransparency = math.random(30, 70) / 100
-        p.Parent = screenGui
-
-        local pCorner = Instance.new("UICorner")
-        pCorner.CornerRadius = UDim.new(1, 0)
-        pCorner.Parent = p
-
-        table.insert(particles, {
-            frame = p,
-            speedX = (math.random() - 0.5) * 0.002,
-            speedY = (math.random() - 0.5) * 0.002,
-            life = math.random(50, 200) / 100,
-            maxLife = 0
-        })
-    end
-
-    -- ============================================
-    --  🎬 加载动画循环
-    -- ============================================
-    local progress = 0
-    local isComplete = false
-
-    -- 粒子更新
-    local particleConn = RunService.Heartbeat:Connect(function(dt)
-        for _, p in pairs(particles) do
-            local pos = p.frame.Position
-            p.frame.Position = UDim2.new(
-                pos.X.Scale + p.speedX * dt * 60,
-                0,
-                pos.Y.Scale + p.speedY * dt * 60,
-                0
+    -- 验证逻辑
+    loginBtn.MouseButton1Click:Connect(function()
+        local inputText = input.Text
+        if inputText == "91" then
+            print("✅ 卡密验证成功！")
+            errorLabel.Text = ""
+            -- 验证成功动画
+            loginBtn.Text = "✅ 验证成功！"
+            loginBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+            task.wait(0.5)
+            screenGui:Destroy()
+            startMainScript()
+        else
+            errorLabel.Text = "❌ 卡密错误，请重新输入"
+            errorLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+            -- 错误抖动效果
+            local shake = TweenService:Create(
+                frame,
+                TweenInfo.new(0.1, Enum.EasingStyle.Linear),
+                { Position = UDim2.new(0.5, -190, 0.5, -140) }
             )
-            if pos.X.Scale < 0 or pos.X.Scale > 1 or pos.Y.Scale < 0 or pos.Y.Scale > 1 then
-                p.frame.Position = UDim2.new(math.random(), 0, math.random(), 0)
-            end
-            p.frame.BackgroundTransparency = math.random(30, 70) / 100
-        end
-    end)
-
-    -- 进度条动画（模拟加载）
-    local totalSteps = 100
-    local currentStep = 0
-
-    local function updateProgress()
-        currentStep = currentStep + 1
-        progress = currentStep / totalSteps
-
-        -- 更新进度条
-        progressBar.Size = UDim2.new(progress, 0, 1, 0)
-        percentText.Text = math.floor(progress * 100) .. "%"
-
-        -- 更新流光位置
-        shine.Position = UDim2.new(progress - 0.3, 0, 0, 0)
-
-        -- 颜色渐变：从蓝色到紫色到粉色
-        local hue = 0.75 + progress * 0.15
-        progressBar.BackgroundColor3 = Color3.fromHSV(hue % 1, 0.8, 1)
-
-        -- Logo霓虹闪烁
-        local alpha = 0.3 + math.sin(tick() * 3 + progress * 10) * 0.2
-        logoGlow.TextTransparency = 1 - alpha
-
-        if progress >= 1 then
-            isComplete = true
-            particleConn:Disconnect()
-            -- 加载完成动画
-            completeLoad()
-        end
-    end
-
-    -- 加载完成动画
-    local function completeLoad()
-        print("✅ 加载完成！")
-
-        -- 进度条填充完成
-        progressBar.Size = UDim2.new(1, 0, 1, 0)
-        percentText.Text = "100%"
-        subText.Text = "► 系统加载完成 ✓"
-        subText.TextColor3 = Color3.fromRGB(100, 255, 150)
-
-        -- 闪烁效果
-        for i = 1, 5 do
-            local trans = i % 2 == 1 and 0.8 or 0
-            bg.BackgroundTransparency = trans
-            task.wait(0.08)
-        end
-
-        -- 平滑消失
-        local fadeOut = TweenService:Create(
-            screenGui,
-            TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-            { [typeof(screenGui)] = "Parent" }
-        )
-        -- 直接移除，因为 ScreenGui 不能这样 Tween
-        local t = TweenService:Create(screenGui, TweenInfo.new(1, Enum.EasingStyle.Quad), { [typeof(screenGui)] = "Parent" })
-        local tween = TweenService:Create(
-            screenGui,
-            TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
-            { [typeof(screenGui)] = "Parent" }
-        )
-        -- 稳妥方式：渐隐后移除
-        for i = 1, 10 do
-            screenGui.Enabled = false
-            -- 简单渐隐：透明度变化
-            local alpha = 1 - i / 10
-            if bg then bg.BackgroundTransparency = alpha end
-            if logo then logo.TextTransparency = alpha end
-            if subText then subText.TextTransparency = alpha end
-            if percentText then percentText.TextTransparency = alpha end
-            if barContainer then barContainer.BackgroundTransparency = alpha end
-            if progressBar then progressBar.BackgroundTransparency = alpha end
+            frame.Position = UDim2.new(0.5, -195, 0.5, -140)
             task.wait(0.05)
-        end
-        screenGui:Destroy()
-
-        -- 启动主功能
-        startMainScript()
-    end
-
-    -- 模拟加载进度
-    task.spawn(function()
-        while not isComplete do
-            local waitTime = math.random(50, 150) / 1000
-            task.wait(waitTime)
-            if currentStep < totalSteps then
-                updateProgress()
-            end
+            frame.Position = UDim2.new(0.5, -185, 0.5, -140)
+            task.wait(0.05)
+            frame.Position = UDim2.new(0.5, -190, 0.5, -140)
+            input.Text = ""
+            input:CaptureFocus()
         end
     end)
 
-    -- 初始动画：Logo 从下往上出现
-    logo.Position = UDim2.new(0.5, 0, 0.35, 0)
-    local logoIn = TweenService:Create(
-        logo,
-        TweenInfo.new(1.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-        { Position = UDim2.new(0.5, 0, 0.25, 0) }
-    )
-    logoIn:Play()
-
-    -- 进度条入场
-    barContainer.BackgroundTransparency = 1
-    local barIn = TweenService:Create(
-        barContainer,
-        TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        { BackgroundTransparency = 0 }
-    )
-    task.wait(0.5)
-    barIn:Play()
-
-    -- 子文字闪烁
-    task.spawn(function()
-        while not isComplete do
-            local currentText = subText.Text
-            if currentText == "► 系统加载中..." then
-                subText.Text = "► 系统加载中.  "
-            elseif currentText == "► 系统加载中.  " then
-                subText.Text = "► 系统加载中.. "
-            elseif currentText == "► 系统加载中.. " then
-                subText.Text = "► 系统加载中..."
-            end
-            task.wait(0.3)
+    -- 按回车键验证
+    input.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            loginBtn.MouseButton1Click:Fire()
         end
     end)
 
@@ -351,19 +174,23 @@ local function createLoadingScreen()
 end
 
 -- ============================================
---  🛡️ 防封系统（加载完成后启动）
+--  🚀 主脚本（验证成功后启动）
 -- ============================================
 local function startMainScript()
-    print("🛡️ 启动WANTED最强防封系统...")
+    print("🛡️ 启动防封系统...")
 
-    -- 1. 拦截所有踢出
+    -- 防封系统
+    local player = game.Players.LocalPlayer
+    local RunService = game:GetService("RunService")
+    local VirtualUser = game:GetService("VirtualUser")
+    local TeleportService = game:GetService("TeleportService")
+
     local oldKick = player.Kick
     player.Kick = function(self, msg)
         warn("🛡️ 拦截踢出: " .. tostring(msg))
         return nil
     end
 
-    -- 2. 全局拦截检测
     pcall(function()
         local mt = getrawmetatable(game)
         if mt then
@@ -372,9 +199,7 @@ local function startMainScript()
             setreadonly(mt, false)
             mt.__namecall = newcclosure(function(self, ...)
                 local method = getnamecallmethod()
-                if method == "Kick" or method == "Ban" or method == "Remove" then
-                    return nil
-                end
+                if method == "Kick" or method == "Ban" or method == "Remove" then return nil end
                 return oldNamecall(self, ...)
             end)
             mt.__index = newcclosure(function(self, key)
@@ -385,7 +210,6 @@ local function startMainScript()
         end
     end)
 
-    -- 3. 速度伪装
     local function speedBypass()
         local char = player.Character
         if not char then return end
@@ -400,7 +224,6 @@ local function startMainScript()
     player.CharacterAdded:Connect(function() task.wait(0.3) speedBypass() end)
     speedBypass()
 
-    -- 4. 防拉回
     local function antiTeleport()
         local char = player.Character
         if not char then return end
@@ -420,50 +243,6 @@ local function startMainScript()
     player.CharacterAdded:Connect(function() task.wait(0.3) antiTeleport() end)
     antiTeleport()
 
-    -- 5. 伪装飞行
-    local function flyBypass()
-        local char = player.Character
-        if not char then return end
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        local hum = char:FindFirstChild("Humanoid")
-        if not hrp or not hum then return end
-        local lastY = hrp.Position.Y
-        RunService.Heartbeat:Connect(function()
-            if not hrp or not hrp.Parent then return end
-            if hrp.Position.Y - lastY > 50 then
-                hum.PlatformStand = false
-                hum.Sit = false
-                hum.Jump = true
-                task.wait(0.1)
-                hum.Jump = false
-            end
-            lastY = hrp.Position.Y
-        end)
-    end
-    player.CharacterAdded:Connect(function() task.wait(0.3) flyBypass() end)
-    flyBypass()
-
-    -- 6. 防死亡
-    local function antiDeath()
-        local char = player.Character
-        if char then
-            local hum = char:FindFirstChild("Humanoid")
-            if hum then
-                hum.HealthChanged:Connect(function()
-                    if hum.Health <= 0 then
-                        task.wait(0.1)
-                        if hum and hum.Parent then
-                            hum.Health = hum.MaxHealth
-                        end
-                    end
-                end)
-            end
-        end
-    end
-    player.CharacterAdded:Connect(function() task.wait(0.3) antiDeath() end)
-    antiDeath()
-
-    -- 7. 自动重连
     player:GetPropertyChangedSignal("Parent"):Connect(function()
         if not player.Parent then
             task.wait(2)
@@ -471,110 +250,149 @@ local function startMainScript()
         end
     end)
 
-    print("✅ 最强防封已启动")
+    print("✅ 防封已启动")
 
     -- ============================================
-    --  📍 ATM 坐标
+    --  功能变量
     -- ============================================
-    local atmLocations = {
-        -- { "银行ATM", CFrame.new(0, 0, 0) },
-    }
-
-    -- ============================================
-    --  📍 F3 复制坐标
-    -- ============================================
-    UserInputService.InputBegan:Connect(function(input, gp)
-        if gp then return end
-        if input.KeyCode == Enum.KeyCode.F3 then
-            local char = player.Character
-            if char then
-                local hrp = char:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    local pos = hrp.Position
-                    local coordText = string.format("CFrame.new(%.2f, %.2f, %.2f)", pos.X, pos.Y, pos.Z)
-                    pcall(function()
-                        if setclipboard then setclipboard(coordText) end
-                    end)
-                    print("📍 坐标已复制: " .. coordText)
-                end
-            end
-        end
-    end)
+    local speedEnabled = false
+    local speedValue = 50
+    local noclipEnabled = false
+    local noclipConnection = nil
+    local flyEnabled = false
+    local flySpeed = 50
+    local flyBV, flyBG, flyConn = nil, nil, nil
+    local isAutoFinding = false
+    local atmIndex = 1
+    local atmLocations = {}
 
     -- ============================================
     --  💰 抢ATM
     -- ============================================
-    local function interactATM()
+    local function robATM()
         local char = player.Character
         if not char then return false end
         local hrp = char:FindFirstChild("HumanoidRootPart")
         if not hrp then return false end
 
+        local success = false
         for _, obj in pairs(workspace:GetDescendants()) do
             if obj:IsA("ProximityPrompt") then
                 local parent = obj.Parent
                 if parent then
                     local part = parent:FindFirstChildWhichIsA("BasePart") or parent
                     if part and part:IsA("BasePart") then
-                        if (part.Position - hrp.Position).Magnitude < 15 then
+                        if (part.Position - hrp.Position).Magnitude < 20 then
                             pcall(function() fireproximityprompt(obj) end)
-                            print("💵 抢ATM成功")
-                            return true
-                        end
-                    end
-                end
-            end
-            if obj:IsA("ClickDetector") then
-                local parent = obj.Parent
-                if parent then
-                    local part = parent:FindFirstChildWhichIsA("BasePart") or parent
-                    if part and part:IsA("BasePart") then
-                        if (part.Position - hrp.Position).Magnitude < 10 then
-                            pcall(function() fireclickdetector(obj) end)
-                            print("💵 抢ATM成功")
-                            return true
+                            success = true
                         end
                     end
                 end
             end
         end
+
+        if not success then
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj:IsA("ClickDetector") then
+                    local parent = obj.Parent
+                    if parent then
+                        local part = parent:FindFirstChildWhichIsA("BasePart") or parent
+                        if part and part:IsA("BasePart") then
+                            if (part.Position - hrp.Position).Magnitude < 15 then
+                                pcall(function() fireclickdetector(obj) end)
+                                success = true
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        if not success then
+            pcall(function()
+                local VirtualInput = game:GetService("VirtualInputManager")
+                VirtualInput:SendKeyEvent(true, "E", false, game)
+                task.wait(0.1)
+                VirtualInput:SendKeyEvent(false, "E", false, game)
+                success = true
+            end)
+        end
+
+        return success
+    end
+
+    -- ============================================
+    --  🔍 找ATM
+    -- ============================================
+    local function findATM()
+        local char = player.Character
+        if not char then return nil end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return nil end
+
+        local nearest = nil
+        local minDist = math.huge
+
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj.Name and obj.Name:lower():find("atm") then
+                local pos = nil
+                if obj:IsA("BasePart") then
+                    pos = obj.Position
+                elseif obj:FindFirstChild("HumanoidRootPart") then
+                    pos = obj.HumanoidRootPart.Position
+                elseif obj:FindFirstChildWhichIsA("BasePart") then
+                    pos = obj:FindFirstChildWhichIsA("BasePart").Position
+                end
+                if pos then
+                    local dist = (pos - hrp.Position).Magnitude
+                    if dist < minDist then
+                        minDist = dist
+                        nearest = obj
+                    end
+                end
+            end
+        end
+        return nearest, minDist
+    end
+
+    -- ============================================
+    --  🚀 传送到ATM并抢
+    -- ============================================
+    local function teleportToATM()
+        local atm, dist = findATM()
+        if atm then
+            local char = player.Character
+            if char then
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    local pos = atm:IsA("BasePart") and atm.Position or
+                                (atm:FindFirstChild("HumanoidRootPart") and atm.HumanoidRootPart.Position) or
+                                (atm:FindFirstChildWhichIsA("BasePart") and atm:FindFirstChildWhichIsA("BasePart").Position)
+                    if pos then
+                        hrp.CFrame = CFrame.new(pos + Vector3.new(0, 2, 0))
+                        print("🚀 传送到ATM附近")
+                        task.wait(0.3)
+                        robATM()
+                        return true
+                    end
+                end
+            end
+        end
+        print("❌ 未找到ATM")
         return false
     end
 
     -- ============================================
-    --  🚀 传送 + 抢ATM
+    --  🔄 自动循环抢ATM
     -- ============================================
-    local atmIndex = 1
-    local isAutoFinding = false
-
-    local function teleportToATM()
-        if #atmLocations == 0 then
-            print("❌ 没有ATM坐标，请按F3添加")
-            return
-        end
-        local char = player.Character
-        if not char then return end
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if not hrp then return end
-        local atm = atmLocations[atmIndex]
-        if atm then
-            hrp.CFrame = atm[2]
-            print("🚀 传送到: " .. atm[1])
-            task.wait(0.3)
-            interactATM()
-            atmIndex = atmIndex + 1
-            if atmIndex > #atmLocations then atmIndex = 1 end
-        end
-    end
-
-    local function startAutoFindATM()
+    local function toggleAutoATM()
         isAutoFinding = not isAutoFinding
         if isAutoFinding then
             print("🔄 自动抢ATM开启")
             task.spawn(function()
                 while isAutoFinding do
                     teleportToATM()
-                    task.wait(2)
+                    task.wait(3)
                 end
             end)
         else
@@ -585,9 +403,6 @@ local function startMainScript()
     -- ============================================
     --  🏃 加速
     -- ============================================
-    local speedEnabled = false
-    local speedValue = 50
-
     local function toggleSpeed()
         speedEnabled = not speedEnabled
         local char = player.Character
@@ -603,9 +418,6 @@ local function startMainScript()
     -- ============================================
     --  🧱 穿墙
     -- ============================================
-    local noclipEnabled = false
-    local noclipConnection = nil
-
     local function toggleNoclip()
         noclipEnabled = not noclipEnabled
         if noclipEnabled then
@@ -633,10 +445,6 @@ local function startMainScript()
     -- ============================================
     --  ✈️ 飞行
     -- ============================================
-    local flyEnabled = false
-    local flySpeed = 50
-    local flyBV, flyBG, flyConn = nil, nil, nil
-
     local function toggleFly()
         flyEnabled = not flyEnabled
         if flyEnabled then
@@ -679,6 +487,137 @@ local function startMainScript()
     end
 
     -- ============================================
+    --  🖥️ 悬浮窗菜单
+    -- ============================================
+    local function createMenu()
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "WantedMenu"
+        screenGui.Parent = CoreGui
+        screenGui.ResetOnSpawn = false
+
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(0, 220, 0, 320)
+        frame.Position = UDim2.new(0.01, 0, 0.1, 0)
+        frame.BackgroundColor3 = Color3.fromRGB(15, 12, 30)
+        frame.BackgroundTransparency = 0.05
+        frame.BorderSizePixel = 1
+        frame.BorderColor3 = Color3.fromRGB(150, 100, 255)
+        frame.Active = true
+        frame.Draggable = true
+        frame.Parent = screenGui
+
+        local frameCorner = Instance.new("UICorner")
+        frameCorner.CornerRadius = UDim.new(0, 12)
+        frameCorner.Parent = frame
+
+        -- 标题
+        local title = Instance.new("TextLabel")
+        title.Size = UDim2.new(1, 0, 0, 35)
+        title.Position = UDim2.new(0, 0, 0, 5)
+        title.BackgroundTransparency = 1
+        title.Text = "🔫 WANTED"
+        title.TextColor3 = Color3.fromRGB(255, 255, 255)
+        title.TextSize = 20
+        title.Font = Enum.Font.GothamBold
+        title.Parent = frame
+
+        -- 状态标签
+        local status = Instance.new("TextLabel")
+        status.Size = UDim2.new(1, 0, 0, 20)
+        status.Position = UDim2.new(0, 0, 0, 42)
+        status.BackgroundTransparency = 1
+        status.Text = "🛡️ 防封已启动"
+        status.TextColor3 = Color3.fromRGB(0, 255, 100)
+        status.TextSize = 12
+        status.Font = Enum.Font.Gotham
+        status.Parent = frame
+
+        -- 按钮创建函数
+        local function createBtn(text, y, callback)
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(0.9, 0, 0, 32)
+            btn.Position = UDim2.new(0.05, 0, 0, y)
+            btn.BackgroundColor3 = Color3.fromRGB(30, 25, 50)
+            btn.Text = text
+            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            btn.TextSize = 14
+            btn.Font = Enum.Font.GothamBold
+            btn.BorderSizePixel = 0
+            btn.Parent = frame
+
+            local btnCorner = Instance.new("UICorner")
+            btnCorner.CornerRadius = UDim.new(0, 6)
+            btnCorner.Parent = btn
+
+            btn.MouseButton1Click:Connect(callback)
+            btn.MouseEnter:Connect(function()
+                btn.BackgroundColor3 = Color3.fromRGB(150, 100, 255)
+            end)
+            btn.MouseLeave:Connect(function()
+                btn.BackgroundColor3 = Color3.fromRGB(30, 25, 50)
+            end)
+
+            return btn
+        end
+
+        -- 按钮状态文本
+        local atmStatus = "🔍 找ATM"
+        local autoStatus = "🔄 自动抢ATM (关)"
+        local speedStatus = "🏃 加速 (关)"
+        local noclipStatus = "🧱 穿墙 (关)"
+        local flyStatus = "✈️ 飞行 (关)"
+
+        -- 找ATM按钮
+        createBtn("🔍 找ATM并抢劫", 75, function()
+            teleportToATM()
+        end)
+
+        -- 自动抢ATM按钮
+        local autoBtn = createBtn("🔄 自动抢ATM (关)", 115, function()
+            toggleAutoATM()
+            autoBtn.Text = isAutoFinding and "🔄 自动抢ATM (开)" or "🔄 自动抢ATM (关)"
+            autoBtn.BackgroundColor3 = isAutoFinding and Color3.fromRGB(0, 150, 80) or Color3.fromRGB(30, 25, 50)
+        end)
+
+        -- 加速按钮
+        local speedBtn = createBtn("🏃 加速 (关)", 155, function()
+            toggleSpeed()
+            speedBtn.Text = speedEnabled and "🏃 加速 (开)" or "🏃 加速 (关)"
+            speedBtn.BackgroundColor3 = speedEnabled and Color3.fromRGB(0, 150, 80) or Color3.fromRGB(30, 25, 50)
+        end)
+
+        -- 穿墙按钮
+        local noclipBtn = createBtn("🧱 穿墙 (关)", 195, function()
+            toggleNoclip()
+            noclipBtn.Text = noclipEnabled and "🧱 穿墙 (开)" or "🧱 穿墙 (关)"
+            noclipBtn.BackgroundColor3 = noclipEnabled and Color3.fromRGB(0, 150, 80) or Color3.fromRGB(30, 25, 50)
+        end)
+
+        -- 飞行按钮
+        local flyBtn = createBtn("✈️ 飞行 (关)", 235, function()
+            toggleFly()
+            flyBtn.Text = flyEnabled and "✈️ 飞行 (开)" or "✈️ 飞行 (关)"
+            flyBtn.BackgroundColor3 = flyEnabled and Color3.fromRGB(0, 150, 80) or Color3.fromRGB(30, 25, 50)
+        end)
+
+        -- 关闭按钮
+        local closeBtn = Instance.new("TextButton")
+        closeBtn.Size = UDim2.new(0, 25, 0, 25)
+        closeBtn.Position = UDim2.new(1, -30, 0, 5)
+        closeBtn.BackgroundTransparency = 1
+        closeBtn.Text = "✕"
+        closeBtn.TextColor3 = Color3.fromRGB(200, 100, 100)
+        closeBtn.TextSize = 16
+        closeBtn.Font = Enum.Font.GothamBold
+        closeBtn.Parent = frame
+        closeBtn.MouseButton1Click:Connect(function()
+            screenGui:Destroy()
+        end)
+
+        return screenGui
+    end
+
+    -- ============================================
     --  🛡️ 防AFK
     -- ============================================
     player.Idled:Connect(function()
@@ -696,25 +635,13 @@ local function startMainScript()
     -- ============================================
     UserInputService.InputBegan:Connect(function(input, gp)
         if gp then return end
-
         if input.KeyCode == Enum.KeyCode.F1 then
-            print("========================================")
-            print("  🔫 WANTED 快捷键")
-            print("  F1 - 显示此菜单")
-            print("  F2 - 传送并抢ATM")
-            print("  F3 - 复制当前坐标")
-            print("  F4 - 自动循环抢ATM (开关)")
-            print("  F5 - 加速 (开关) [防封保护]")
-            print("  F6 - 穿墙 (开关) [防封保护]")
-            print("  F7 - 飞行 (开关) [防封保护]")
-            print("========================================")
+            -- 切换悬浮窗显示
+            local gui = CoreGui:FindFirstChild("WantedMenu")
+            if gui then
+                gui.Enabled = not gui.Enabled
+            end
         end
-
-        if input.KeyCode == Enum.KeyCode.F2 then teleportToATM() end
-        if input.KeyCode == Enum.KeyCode.F4 then startAutoFindATM() end
-        if input.KeyCode == Enum.KeyCode.F5 then toggleSpeed() end
-        if input.KeyCode == Enum.KeyCode.F6 then toggleNoclip() end
-        if input.KeyCode == Enum.KeyCode.F7 then toggleFly() end
     end)
 
     -- ============================================
@@ -737,14 +664,20 @@ local function startMainScript()
         end
     end)
 
+    -- ============================================
+    --  🚀 启动悬浮窗
+    -- ============================================
+    createMenu()
+
     print("========================================")
     print("  ✅ WANTED 脚本已加载")
-    print("  🛡️ 加速/飞天/穿墙 全部防封保护")
-    print("  📌 F1 查看所有快捷键")
+    print("  🔑 卡密: 91")
+    print("  🛡️ 防封已启动")
+    print("  📌 按 F1 切换悬浮窗")
     print("========================================")
 end
 
 -- ============================================
---  🚀 启动加载动画
+--  🚀 启动卡密验证
 -- ============================================
-createLoadingScreen()
+showLogin()
