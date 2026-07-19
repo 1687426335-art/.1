@@ -1,31 +1,24 @@
 -- ============================================
---  WANTED 脚本 + 卡密验证 + 悬浮窗
---  卡密：91
---  验证成功后显示悬浮窗菜单
+--  WANTED 脚本 + 卡密验证（修复版）
+--  卡密：91 | 修复验证按钮点击无反应
 -- ============================================
 
 local player = game.Players.LocalPlayer
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
 
 print("🔫 WANTED 脚本已加载，等待卡密验证...")
 
 -- ============================================
---  🔑 卡密验证系统（卡密：91）
+--  🔑 卡密验证系统（修复版）
 -- ============================================
 local function showLogin()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "LoginGUI"
     screenGui.Parent = CoreGui
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-    -- 背景遮罩
-    local bg = Instance.new("Frame")
-    bg.Size = UDim2.new(1, 0, 1, 0)
-    bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    bg.BackgroundTransparency = 0.6
-    bg.Parent = screenGui
 
     -- 主登录框
     local frame = Instance.new("Frame")
@@ -39,18 +32,6 @@ local function showLogin()
     local frameCorner = Instance.new("UICorner")
     frameCorner.CornerRadius = UDim.new(0, 16)
     frameCorner.Parent = frame
-
-    -- 霓虹边框光效
-    local borderGlow = Instance.new("Frame")
-    borderGlow.Size = UDim2.new(1, 10, 1, 10)
-    borderGlow.Position = UDim2.new(0, -5, 0, -5)
-    borderGlow.BackgroundTransparency = 1
-    borderGlow.BorderSizePixel = 2
-    borderGlow.BorderColor3 = Color3.fromRGB(150, 100, 255)
-    borderGlow.Parent = frame
-    local borderCorner = Instance.new("UICorner")
-    borderCorner.CornerRadius = UDim.new(0, 18)
-    borderCorner.Parent = borderGlow
 
     -- Logo
     local logo = Instance.new("TextLabel")
@@ -85,6 +66,7 @@ local function showLogin()
     input.TextSize = 18
     input.Font = Enum.Font.Gotham
     input.BorderSizePixel = 0
+    input.Text = ""  -- 确保输入框为空
     input.Parent = frame
 
     local inputCorner = Instance.new("UICorner")
@@ -103,7 +85,7 @@ local function showLogin()
     errorLabel.TextXAlignment = Enum.TextXAlignment.Center
     errorLabel.Parent = frame
 
-    -- 验证按钮
+    -- ===== 修复：验证按钮（使用 MouseButton1Click 确保生效） =====
     local loginBtn = Instance.new("TextButton")
     loginBtn.Size = UDim2.new(0, 140, 0, 42)
     loginBtn.Position = UDim2.new(0.5, -70, 0, 198)
@@ -114,59 +96,59 @@ local function showLogin()
     loginBtn.Font = Enum.Font.GothamBold
     loginBtn.BorderSizePixel = 0
     loginBtn.Parent = frame
+    loginBtn.AutoButtonColor = true  -- 确保按钮可以点击
 
     local btnCorner = Instance.new("UICorner")
     btnCorner.CornerRadius = UDim.new(0, 8)
     btnCorner.Parent = loginBtn
 
-    -- 按钮悬停光效
-    local btnGlow = Instance.new("Frame")
-    btnGlow.Size = UDim2.new(1, 10, 1, 10)
-    btnGlow.Position = UDim2.new(0, -5, 0, -5)
-    btnGlow.BackgroundTransparency = 1
-    btnGlow.BorderSizePixel = 2
-    btnGlow.BorderColor3 = Color3.fromRGB(200, 150, 255)
-    btnGlow.BorderTransparency = 0.8
-    btnGlow.Parent = loginBtn
-    local btnGlowCorner = Instance.new("UICorner")
-    btnGlowCorner.CornerRadius = UDim.new(0, 10)
-    btnGlowCorner.Parent = btnGlow
-
-    -- 验证逻辑
+    -- ===== 验证逻辑（使用 MouseButton1Click，并增加点击反馈） =====
     loginBtn.MouseButton1Click:Connect(function()
+        print("🔘 验证按钮被点击")  -- 调试输出
         local inputText = input.Text
+        print("📝 输入的卡密: " .. inputText)
+
         if inputText == "91" then
             print("✅ 卡密验证成功！")
             errorLabel.Text = ""
-            -- 验证成功动画
-            loginBtn.Text = "✅ 验证成功！"
+            errorLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+            errorLabel.Text = "✅ 验证成功！"
+            loginBtn.Text = "✅ 成功！"
             loginBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
-            task.wait(0.5)
+
+            -- 延迟关闭登录框
+            task.wait(0.8)
             screenGui:Destroy()
             startMainScript()
         else
+            print("❌ 卡密错误: " .. inputText)
             errorLabel.Text = "❌ 卡密错误，请重新输入"
             errorLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+
             -- 错误抖动效果
-            local shake = TweenService:Create(
-                frame,
-                TweenInfo.new(0.1, Enum.EasingStyle.Linear),
-                { Position = UDim2.new(0.5, -190, 0.5, -140) }
-            )
             frame.Position = UDim2.new(0.5, -195, 0.5, -140)
             task.wait(0.05)
             frame.Position = UDim2.new(0.5, -185, 0.5, -140)
             task.wait(0.05)
             frame.Position = UDim2.new(0.5, -190, 0.5, -140)
+
             input.Text = ""
             input:CaptureFocus()
         end
     end)
 
-    -- 按回车键验证
+    -- ===== 按回车键验证 =====
     input.FocusLost:Connect(function(enterPressed)
         if enterPressed then
+            print("↩️ 回车键触发验证")
             loginBtn.MouseButton1Click:Fire()
+        end
+    end)
+
+    -- ===== 额外：点击输入框自动清空错误提示 =====
+    input:GetPropertyChangedSignal("Text"):Connect(function()
+        if errorLabel.Text ~= "" then
+            errorLabel.Text = ""
         end
     end)
 
@@ -180,7 +162,6 @@ local function startMainScript()
     print("🛡️ 启动防封系统...")
 
     -- 防封系统
-    local player = game.Players.LocalPlayer
     local RunService = game:GetService("RunService")
     local VirtualUser = game:GetService("VirtualUser")
     local TeleportService = game:GetService("TeleportService")
@@ -263,8 +244,6 @@ local function startMainScript()
     local flySpeed = 50
     local flyBV, flyBG, flyConn = nil, nil, nil
     local isAutoFinding = false
-    local atmIndex = 1
-    local atmLocations = {}
 
     -- ============================================
     --  💰 抢ATM
@@ -544,6 +523,7 @@ local function startMainScript()
             btn.Font = Enum.Font.GothamBold
             btn.BorderSizePixel = 0
             btn.Parent = frame
+            btn.AutoButtonColor = true
 
             local btnCorner = Instance.new("UICorner")
             btnCorner.CornerRadius = UDim.new(0, 6)
@@ -559,13 +539,6 @@ local function startMainScript()
 
             return btn
         end
-
-        -- 按钮状态文本
-        local atmStatus = "🔍 找ATM"
-        local autoStatus = "🔄 自动抢ATM (关)"
-        local speedStatus = "🏃 加速 (关)"
-        local noclipStatus = "🧱 穿墙 (关)"
-        local flyStatus = "✈️ 飞行 (关)"
 
         -- 找ATM按钮
         createBtn("🔍 找ATM并抢劫", 75, function()
@@ -636,7 +609,6 @@ local function startMainScript()
     UserInputService.InputBegan:Connect(function(input, gp)
         if gp then return end
         if input.KeyCode == Enum.KeyCode.F1 then
-            -- 切换悬浮窗显示
             local gui = CoreGui:FindFirstChild("WantedMenu")
             if gui then
                 gui.Enabled = not gui.Enabled
