@@ -1,5 +1,5 @@
 -- ============================================
---  WANTED 脚本 + 最强防封
+--  WANTED 脚本 + 最强防封（修复版）
 --  功能：自动抢ATM | 传送 | 加速 | 飞天 | 穿墙 | 防踢 | 过检测
 --  按 F1 查看所有快捷键
 -- ============================================
@@ -23,15 +23,17 @@ print("🔫 WANTED 脚本已加载")
 local oldKick = player.Kick
 player.Kick = function(self, msg)
     warn("🛡️ 拦截踢出: " .. tostring(msg))
-    CoreGui:SetCore("SendNotification", {
-        Title = "🛡️ 防封拦截",
-        Text = "已拦截踢出请求",
-        Duration = 3
-    })
+    pcall(function()
+        CoreGui:SetCore("SendNotification", {
+            Title = "🛡️ 防封拦截",
+            Text = "已拦截踢出请求",
+            Duration = 3
+        })
+    end)
     return nil
 end
 
--- 2. 全局拦截服务器检测
+-- 2. 全局拦截服务器检测（修复：增加容错）
 pcall(function()
     local mt = getrawmetatable(game)
     if mt then
@@ -67,7 +69,6 @@ local function speedBypass()
     if not hum then return end
     RunService.Heartbeat:Connect(function()
         if not hum or not hum.Parent then return end
-        -- 服务器看到的永远是16
         if hum.WalkSpeed ~= 16 then
             hum.WalkSpeed = 16
         end
@@ -207,7 +208,7 @@ local atmLocations = {
 }
 
 -- ============================================
---  📍 坐标获取工具
+--  📍 坐标获取工具（修复：增加容错）
 -- ============================================
 UserInputService.InputBegan:Connect(function(input, gp)
     if gp then return end
@@ -218,20 +219,28 @@ UserInputService.InputBegan:Connect(function(input, gp)
             if hrp then
                 local pos = hrp.Position
                 local coordText = string.format("CFrame.new(%.2f, %.2f, %.2f)", pos.X, pos.Y, pos.Z)
-                setclipboard(coordText)
+                pcall(function()
+                    if setclipboard then
+                        setclipboard(coordText)
+                    elseif game:GetService("ClipboardService") then
+                        game:GetService("ClipboardService"):SetClipboard(coordText)
+                    end
+                end)
                 print("📍 坐标已复制: " .. coordText)
-                CoreGui:SetCore("SendNotification", {
-                    Title = "📍 坐标已复制",
-                    Text = coordText,
-                    Duration = 3
-                })
+                pcall(function()
+                    CoreGui:SetCore("SendNotification", {
+                        Title = "📍 坐标已复制",
+                        Text = coordText,
+                        Duration = 3
+                    })
+                end)
             end
         end
     end
 end)
 
 -- ============================================
---  💰 自动抢ATM核心功能
+--  💰 自动抢ATM核心功能（修复：增加更多交互方式）
 -- ============================================
 local function interactATM()
     local char = player.Character
@@ -239,9 +248,10 @@ local function interactATM()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return false end
     
+    local found = false
     local atms = workspace:GetDescendants()
     for _, obj in pairs(atms) do
-        -- ProximityPrompt
+        -- 方法1：ProximityPrompt
         if obj:IsA("ProximityPrompt") then
             local parent = obj.Parent
             if parent then
@@ -249,14 +259,14 @@ local function interactATM()
                 if part and part:IsA("BasePart") then
                     local dist = (part.Position - hrp.Position).Magnitude
                     if dist < 15 then
-                        fireproximityprompt(obj)
-                        print("💵 正在抢ATM...")
-                        return true
+                        pcall(function() fireproximityprompt(obj) end)
+                        print("💵 正在抢ATM (ProximityPrompt)...")
+                        found = true
                     end
                 end
             end
         end
-        -- ClickDetector
+        -- 方法2：ClickDetector
         if obj:IsA("ClickDetector") then
             local parent = obj.Parent
             if parent then
@@ -264,14 +274,14 @@ local function interactATM()
                 if part and part:IsA("BasePart") then
                     local dist = (part.Position - hrp.Position).Magnitude
                     if dist < 10 then
-                        fireclickdetector(obj)
-                        print("💵 正在抢ATM...")
-                        return true
+                        pcall(function() fireclickdetector(obj) end)
+                        print("💵 正在抢ATM (ClickDetector)...")
+                        found = true
                     end
                 end
             end
         end
-        -- 名称包含ATM
+        -- 方法3：名称包含ATM
         if obj.Name and obj.Name:lower():find("atm") then
             if obj:IsA("BasePart") and obj.Parent ~= char then
                 local dist = (obj.Position - hrp.Position).Magnitude
@@ -283,12 +293,45 @@ local function interactATM()
                             firetouchinterest(hrp, target, 1)
                         end
                     end)
-                    return true
+                    print("💵 正在抢ATM (Touch)...")
+                    found = true
                 end
             end
         end
+        -- 方法4：Tool 或 可点击对象
+        if obj:IsA("Tool") and obj.Name and obj.Name:lower():find("atm") then
+            pcall(function()
+                local hum = char:FindFirstChild("Humanoid")
+                if hum then
+                    hum:EquipTool(obj)
+                    print("💵 正在抢ATM (Tool)...")
+                    found = true
+                end
+            end)
+        end
+        -- 方法5：RemoteEvent 触发
+        if obj:IsA("RemoteEvent") and obj.Name and obj.Name:lower():find("atm") then
+            pcall(function()
+                obj:FireServer()
+                print("💵 正在抢ATM (RemoteEvent)...")
+                found = true
+            end)
+        end
     end
-    return false
+    
+    -- 方法6：尝试按 E 键（模拟交互按键）
+    if not found then
+        pcall(function()
+            local VirtualInput = game:GetService("VirtualInputManager")
+            VirtualInput:SendKeyEvent(true, "E", false, game)
+            task.wait(0.1)
+            VirtualInput:SendKeyEvent(false, "E", false, game)
+        end)
+        print("💵 尝试按 E 键交互...")
+        found = true
+    end
+    
+    return found
 end
 
 -- ============================================
@@ -300,6 +343,13 @@ local isAutoFinding = false
 local function teleportToATM()
     if #atmLocations == 0 then
         print("❌ 没有ATM坐标，请按F3添加位置")
+        pcall(function()
+            CoreGui:SetCore("SendNotification", {
+                Title = "❌ 没有ATM坐标",
+                Text = "请走到ATM前按F3复制坐标并添加到脚本",
+                Duration = 5
+            })
+        end)
         return
     end
     
@@ -316,6 +366,13 @@ local function teleportToATM()
         local success = interactATM()
         if success then
             print("✅ 已抢ATM: " .. atm[1])
+            pcall(function()
+                CoreGui:SetCore("SendNotification", {
+                    Title = "💵 抢劫成功",
+                    Text = "已抢: " .. atm[1],
+                    Duration = 2
+                })
+            end)
         else
             print("⚠️ 未找到ATM交互点: " .. atm[1])
             task.wait(0.3)
@@ -335,11 +392,13 @@ local function startAutoFindATM()
     isAutoFinding = not isAutoFinding
     if isAutoFinding then
         print("🔄 自动循环抢ATM已开启")
-        CoreGui:SetCore("SendNotification", {
-            Title = "🔄 自动抢ATM",
-            Text = "已开启，开始循环抢劫ATM",
-            Duration = 3
-        })
+        pcall(function()
+            CoreGui:SetCore("SendNotification", {
+                Title = "🔄 自动抢ATM",
+                Text = "已开启，开始循环抢劫ATM",
+                Duration = 3
+            })
+        end)
         task.spawn(function()
             while isAutoFinding do
                 teleportToATM()
@@ -348,6 +407,13 @@ local function startAutoFindATM()
         end)
     else
         print("🔄 自动循环抢ATM已关闭")
+        pcall(function()
+            CoreGui:SetCore("SendNotification", {
+                Title = "🔄 自动抢ATM",
+                Text = "已关闭",
+                Duration = 2
+            })
+        end)
     end
 end
 
@@ -491,11 +557,13 @@ UserInputService.InputBegan:Connect(function(input, gp)
         print("  F6 - 穿墙 (开关) [防封保护]")
         print("  F7 - 飞行 (开关) [防封保护]")
         print("========================================")
-        CoreGui:SetCore("SendNotification", {
-            Title = "🔫 WANTED 快捷键",
-            Text = "F2抢ATM | F4自动抢 | F5加速 | F6穿墙 | F7飞行 | 🛡️全部防封",
-            Duration = 5
-        })
+        pcall(function()
+            CoreGui:SetCore("SendNotification", {
+                Title = "🔫 WANTED 快捷键",
+                Text = "F2抢ATM | F4自动抢 | F5加速 | F6穿墙 | F7飞行 | 🛡️全部防封",
+                Duration = 5
+            })
+        end)
     end
     
     if input.KeyCode == Enum.KeyCode.F2 then teleportToATM() end
